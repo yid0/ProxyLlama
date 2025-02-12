@@ -1,0 +1,7 @@
+dist
+node_modules
+certs/*.pem
+*lock*
+
+Dockerfile
+tsup*
