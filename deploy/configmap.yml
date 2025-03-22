@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxyllama-config
+  labels:
+    app: proxyllama
+data:
+  NODE_ENV: production
+  OLLAMA_URL: "http://ollama:11434"
+  OLLAMA_HOST: "http://0.0.0.0:11434"
+  OLLAMA_DEBUG: "true"
+  OLLAMA_NUM_PARALLEL: "4"
+  OLLAMA_NOPRUNE: "true"

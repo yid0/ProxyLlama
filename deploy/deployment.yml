@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxyllama
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: proxyllama
+  template:
+    metadata:
+      labels:
+        app: proxyllama
+    spec:
+      containers:
+      - name: proxyllama
+        image: yidoughi/proxyllama
+        command: ["node", "/app/dist/main.js"]
+        envFrom:
+          - configMapRef:
+              name: proxyllama-config
+        ports:
+          - containerPort: 3000      
+      - name: ollama
+        image: yidoughi/ollama
+        command: ["bash", "-c","/usr/local/bin/start.sh"]
+        envFrom:
+          - configMapRef:
+              name: proxyllama-config
+        ports:
+          - containerPort: 11434

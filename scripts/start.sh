@@ -1,22 +1,21 @@
 #!/bin/bash
 
-# Start Ollama in the background
-ollama serve &
+if [ ! -d "$OLLAMA_HOME" ]; then
+  mkdir -p "$OLLAMA_HOME"
+  echo "Created OLLAMA_HOME directory at $OLLAMA_HOME"
+fi
+
+echo "Starting Ollama server..."
+OLLAMA_HOME="$OLLAMA_HOME" OLLAMA_HOST="$OLLAMA_HOST" ollama serve &
 OLLAMA_PID=$!
 
-# Wait for Ollama to be ready
 echo "Waiting for Ollama to start..."
-until curl -s http://localhost:11434/api/tags > /dev/null; do
-    sleep 1
+until curl -s http://localhost:11434/api/tags >/dev/null 2>&1; do
+  sleep 1
 done
 
-# Pull the target model
-echo "Pulling model ${OLLAMA_TARGET_MODEL}..."
-ollama pull ${OLLAMA_TARGET_MODEL}
+echo "Ollama is ready!"
 
-# Start the Node.js application
-echo "Starting Node.js application..."
-node dist/main.js
+trap "kill $OLLAMA_PID $NODE_PID" EXIT
 
-# Cleanup
-kill $OLLAMA_PID
+wait

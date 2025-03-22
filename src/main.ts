@@ -1,32 +1,38 @@
 import Fastify from 'fastify';
-import * as fastifyHelmet from '@fastify/helmet';
-import cors from '@fastify/cors';
-import path  from 'path';
-import * as fs  from 'fs';
-import { OllamaResponse, OllamBodyRequest } from './types';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ModelService } from './service/ollama.service';
+import { OllamaResponse } from './types';
 
-
-
-
-const OLLAMA_PORT = process.env.OLLAMA_PORT ||11434;
+const OLLAMA_PORT = process.env.OLLAMA_PORT || 11434;
 const OLLAMA_URL= process.env.OLLAMA_URL || `http://localhost:${OLLAMA_PORT}`;
+const baseDir = process.cwd();
 
-const httpsOptions = {
-  key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'cert.pem'))
+let server : any;
+
+try{
+  const httpsOptions = {
+    key: fs.readFileSync(path.join(process.cwd(), 'certs', 'key.pem')),
+    cert: fs.readFileSync(path.join(process.cwd(), 'certs', 'cert.pem'))
+  }
+  console.log(`Certificate path: ${path.join(process.cwd(), 'certs')}`);
+  server = Fastify({
+    https: (process.env.NODE_ENV === 'production' ? httpsOptions : undefined) as any,
+  });  
+
+} catch(e) {
+  console.error("Erreur lors du chargement des certificats:", e);
+  server = Fastify();
 }
-const server = Fastify({
-  https: (process.env.NODE_ENV === 'production' ? httpsOptions : undefined) as any,
-});
-
-
-
 
 server.register(require('@fastify/helmet'));
 
 server.get('/', async (request: any, reply:any) => {
-  return { hello: 'Hello world from ProxyLlamma' };
+  const version = require('../package.json').version;
+  return { 
+      hello: 'Hello world from ProxyLlamma',
+      version 
+    };
 });
 
 
@@ -103,7 +109,7 @@ server.post('/chat', async (request: any, reply: any) => {
   }
 });
 
-const start = async () => {
+const start = () => {
   try {
     server.addHook('onRequest', (request: any, reply:any, done:any) => {
       console.log(`Received request : ${request.ip} → ${request.url}`);
@@ -118,8 +124,8 @@ const start = async () => {
       credentials: true
     });
 
-    await server.listen({ port: 3000 });
-    console.log('Server listening on '+  `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://localhost:3000}`);
+    server.listen({ port: 3000, host :'0.0.0.0'});
+    console.log('Server listening on '+  `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://localhost:3000`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);

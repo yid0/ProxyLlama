@@ -1,6 +1,7 @@
 
 import { OllamaModel, OllamBodyRequest } from '../types';
 import { buildDefaultResponse } from '../util/default-response';
+
 export class ModelService {
 
     constructor(private readonly ollamaUrl: string) {}
